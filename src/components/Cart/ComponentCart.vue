@@ -11,7 +11,7 @@
          <th>Manager</th>
       </tr>
 
-      <tr v-for="data of dataCart" :key="data.id">
+      <tr v-for="data of carts" :key="data.id">
          <td><img :src="data.image" alt="" /></td>
          <td>{{data.name}}</td>
          <td>{{ formatNumber(data.price) }}</td>
@@ -27,31 +27,41 @@
 
 <script>
 import axios from 'axios';
- import { ref ,onMounted  } from 'vue';
+import { ref ,onMounted  } from 'vue';
 export default {
-   name: "demoComponentCart", 
+  name: "demoComponentCart",
   setup () {
-
-      const dataCart = ref([]);
-
-       const loadData = async () => {
-            await axios
-               .get('https://636caa44ab4814f2b26a713e.mockapi.io/cart')
-               .then((response) => {
-                  dataCart.value = response.data;
-               })
-               .catch((error) => {
-               console.log(error);
-               });
-     };
-    onMounted(() => loadData())       
- 
-      const formatNumber = (number) => {
-      return new Intl.NumberFormat('vi-VN').format(number) + ' vnd';
+    const dataCart = ref([]);
+    const carts= ref([])
+      const loadData = async () => {
+          await axios
+              .get('https://636caa44ab4814f2b26a713e.mockapi.io/cart')
+              .then((response) => {
+                dataCart.value = response.data;
+                handleData();
+              })
+              .catch((error) => {
+              console.log(error);
+              });
     };
-      return { formatNumber ,dataCart }
+
+    const handleData = () => {
+      const itemsName = dataCart.value.map(item => item.name);
+      const items = [...new Set(itemsName)]
+      for(const item of items) {
+        const itemsByName = dataCart.value.filter(el => el.name == item)
+        const price = itemsByName.reduce((a, object) => { return a + object.price }, 0)
+        const amount = itemsByName.reduce((a, object) => { return a + object.soluong }, 0)
+        carts.value.push({...itemsByName[0], price: price, soluong: amount});
+      }
+    }
+    onMounted(() => loadData())
+    const formatNumber = (number) => {
+    return new Intl.NumberFormat('vi-VN').format(number) + ' vnd';
+    };
+    return { formatNumber ,dataCart, carts }
   }
- 
+
 }
 </script>
 
